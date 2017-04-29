@@ -1,8 +1,12 @@
-;; blogsync-mode-mode.el --- mode for editing hatenablog & blogsync
-;; ISHIKURA Hiroyuki <nekomist@gmail.com>
+;;; blogsync-mode-mode.el --- mode for editing hatenablog & blogsync
+;; Copyright 2017 Hiroyuki Ishikura. All rights reserved.
+;; Use of this source code is governed by a BSD-style
+;; license that can be found in the LICENSE file.
 
-(easy-mmode-define-minor-mode
- blogsync-mode			  ;; mode-name
+;;; Code:
+
+;;;###autoload
+(define-minor-mode blogsync-mode
  "handle hatenablog and blogsync" ;; DOC
  nil 				  ;; init-value
  " BS"				  ;; mode-line
@@ -11,10 +15,7 @@
    ("\C-c\C-s" . blogsync-pull)
    ("\C-c\C-c" . blogsync-push)))
    
-;; íËêî
 (defconst blogsync-mode-version "0.0" "the version of blogsync-mode")
-
-;; ïœêî
 (defgroup blogsync-mode nil "Top of blogsync-mode customization group."
   :group 'hypermedia)
 (defcustom blogsync-command "~/src/go/bin/blogsync.exe"
@@ -35,8 +36,7 @@
       (error "blogsync-command is not properly set"))
   (if (get-process "blogsync")
       (delete-process "blogsync"))
-  (save-excursion
-    (set-buffer (get-buffer-create "*blogsync*"))
+  (with-current-buffer (get-buffer-create "*blogsync*")
     (erase-buffer))
   (display-buffer "*blogsync*"))
 
@@ -44,12 +44,14 @@
   (interactive)
   "Execute blogsync push"
   (blogsync--setup-exec)
+  (message "Blogsync pull")
   (save-excursion
     (cd (expand-file-name blogsync-rootdir))
     (apply (function call-process)
 	   (expand-file-name blogsync-command)
 	   nil "*blogsync*" t
-	   (list "pull" blogsync-hatenablog-host))))
+	   (list "pull" blogsync-hatenablog-host)))
+  (message "Blogsync pull ... done"))
 
 (defun blogsync-post ()
   (interactive)
@@ -57,31 +59,35 @@
   (if (not (y-or-n-p "Create new hatenablog entry?"))
       (user-error "Abort"))
   (blogsync--setup-exec)
+  (message "Blogsync push")
   (save-excursion
     (cd (expand-file-name blogsync-rootdir))
     (apply (function call-process)
 	   (expand-file-name blogsync-command)
 	   nil "*blogsync*" t
 	   (list "post" blogsync-hatenablog-host "--draft"))
+    (message "Blogsync post ... done"))
     (set-buffer "*blogsync*")
     (goto-char (point-max))
     (re-search-backward "store \\(.*\\)")
     (setq file (buffer-substring-no-properties
 		(match-beginning 1) (match-end 1)))
     (find-file (expand-file-name file))
-    (blogsync-mode)))
+    (blogsync-mode))
 
 (defun blogsync-push ()
   (interactive)
   "Execute blogsync push with current buffer"
   (blogsync--setup-exec)
   (save-current-buffer)
+  (message "Blogsync push")
   (save-excursion
     (cd (expand-file-name blogsync-rootdir))
     (apply (function call-process-region)
 	   (point-min) (point-max) ;; whole buffer
 	   (expand-file-name blogsync-command)
 	   nil "*blogsync*" t
-	   (list "push" (buffer-file-name)))))
+	   (list "push" (buffer-file-name))))
+  (message "Blogsync push ... done"))
 
 (provide 'blogsync-mode)
