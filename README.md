@@ -1,0 +1,1 @@
+# blogsync-mode.el
