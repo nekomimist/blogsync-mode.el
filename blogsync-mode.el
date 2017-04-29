@@ -4,6 +4,7 @@
 ;; license that can be found in the LICENSE file.
 
 ;;; Code:
+(require 'path-util) ;; apel
 
 ;;;###autoload
 (define-minor-mode blogsync-mode
@@ -15,11 +16,11 @@
    ("\C-c\C-s" . blogsync-pull)
    ("\C-c\C-c" . blogsync-push)))
    
-(defconst blogsync-mode-version "0.0" "the version of blogsync-mode")
+(defconst blogsync-mode-version "0.0" "The version of blogsync-mode.")
 (defgroup blogsync-mode nil "Top of blogsync-mode customization group."
   :group 'hypermedia)
 (defcustom blogsync-command "~/src/go/bin/blogsync.exe"
-  "The full-path name of Blogsync executable"
+  "The full-path name of Blogsync executable."
   :type 'filename
   :group 'blogsync-mode)
 (defcustom blogsync-rootdir "~/blog/"
@@ -27,13 +28,14 @@
   :type 'directory
   :group 'blogsync-mode)
 (defcustom blogsync-hatenablog-host "nekomimist.hatenablog.com"
-  "The hostname of your hatena blog"
+  "The hostname of your hatena blog."
   :type 'hostname
   :group 'blogsync-mode)
 
 (defun blogsync--setup-exec ()
+  "setup to execute blogsync."
   (if (not (exec-installed-p (expand-file-name blogsync-command)))
-      (error "blogsync-command is not properly set"))
+      (error "The bogsync-command is not properly set"))
   (if (get-process "blogsync")
       (delete-process "blogsync"))
   (with-current-buffer (get-buffer-create "*blogsync*")
@@ -41,8 +43,8 @@
   (display-buffer "*blogsync*"))
 
 (defun blogsync-pull ()
+  "Execute blogsync push."
   (interactive)
-  "Execute blogsync push"
   (blogsync--setup-exec)
   (message "Blogsync pull")
   (save-excursion
@@ -54,9 +56,9 @@
   (message "Blogsync pull ... done"))
 
 (defun blogsync-post ()
+  "Execute blogsync post."
   (interactive)
-  "Execute blogsync post"
-  (if (not (y-or-n-p "Create new hatenablog entry?"))
+  (if (not (y-or-n-p "Create new hatenablog entry? "))
       (user-error "Abort"))
   (blogsync--setup-exec)
   (message "Blogsync push")
@@ -76,8 +78,8 @@
     (blogsync-mode))
 
 (defun blogsync-push ()
+  "Execute blogsync push with current buffer."
   (interactive)
-  "Execute blogsync push with current buffer"
   (blogsync--setup-exec)
   (save-current-buffer)
   (message "Blogsync push")
@@ -91,3 +93,4 @@
   (message "Blogsync push ... done"))
 
 (provide 'blogsync-mode)
+;;; blogsync-mode.el ends here
