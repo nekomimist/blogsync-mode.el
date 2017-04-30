@@ -13,8 +13,8 @@
  " BS"				  ;; mode-line
  ;; keymap
  '(("\C-cn" . blogsync-post)
-   ("\C-c\C-s" . blogsync-pull)
-   ("\C-c\C-c" . blogsync-push)))
+   ("\C-cs" . blogsync-pull)
+   ("\C-cc" . blogsync-push)))
    
 (defconst blogsync-mode-version "0.0" "The version of blogsync-mode.")
 (defgroup blogsync-mode nil "Top of blogsync-mode customization group."
@@ -80,6 +80,8 @@
 (defun blogsync-push ()
   "Execute blogsync push with current buffer."
   (interactive)
+  (if (not (y-or-n-p "Push current buffer to hatenablog? "))
+      (user-error "Abort"))
   (blogsync--setup-exec)
   (save-current-buffer)
   (message "Blogsync push")
