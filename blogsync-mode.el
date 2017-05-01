@@ -19,15 +19,15 @@
 (defconst blogsync-mode-version "0.0" "The version of blogsync-mode.")
 (defgroup blogsync-mode nil "Top of blogsync-mode customization group."
   :group 'hypermedia)
-(defcustom blogsync-command "~/src/go/bin/blogsync.exe"
-  "The full-path name of Blogsync executable."
+(defcustom blogsync-command "blogsync"
+  "The Blogsync executable filename."
   :type 'filename
   :group 'blogsync-mode)
 (defcustom blogsync-rootdir "~/blog/"
   "The root directory of blog."
   :type 'directory
   :group 'blogsync-mode)
-(defcustom blogsync-hatenablog-host "nekomimist.hatenablog.com"
+(defcustom blogsync-hatenablog-host nil
   "The hostname of your hatena blog."
   :type 'hostname
   :group 'blogsync-mode)
@@ -72,9 +72,8 @@
     (set-buffer "*blogsync*")
     (goto-char (point-max))
     (re-search-backward "store \\(.*\\)")
-    (setq file (buffer-substring-no-properties
-		(match-beginning 1) (match-end 1)))
-    (find-file (expand-file-name file))
+    (find-file (expand-file-name (buffer-substring-no-properties
+		(match-beginning 1) (match-end 1))))
     (blogsync-mode))
 
 (defun blogsync-push ()
