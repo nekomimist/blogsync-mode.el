@@ -42,6 +42,16 @@
     (erase-buffer))
   (display-buffer "*blogsync*"))
 
+(defun blogsync--get-stored-filename ()
+  "get filename which bloogsync stores"
+  (save-excursion
+    (set-buffer "*blogsync*")
+    (goto-char (point-max))
+    (if (not (re-search-backward "store \\(.*\\)" nil t))
+	nil
+      (expand-file-name (buffer-substring-no-properties
+			 (match-beginning 1) (match-end 1))))))
+
 (defun blogsync-pull ()
   "Execute blogsync push."
   (interactive)
@@ -69,11 +79,7 @@
 	   nil "*blogsync*" t
 	   (list "post" blogsync-hatenablog-host "--draft"))
     (message "Blogsync post ... done"))
-    (set-buffer "*blogsync*")
-    (goto-char (point-max))
-    (re-search-backward "store \\(.*\\)")
-    (find-file (expand-file-name (buffer-substring-no-properties
-		(match-beginning 1) (match-end 1))))
+    (find-file (blogsync--get-stored-filename))
     (blogsync-mode))
 
 (defun blogsync-push ()
@@ -81,17 +87,26 @@
   (interactive)
   (if (not (y-or-n-p "Push current buffer to hatenablog? "))
       (user-error "Abort"))
+  (save-buffer)
   (blogsync--setup-exec)
-  (save-current-buffer)
   (message "Blogsync push")
   (save-excursion
-    (cd (expand-file-name blogsync-rootdir))
-    (apply (function call-process-region)
-	   (point-min) (point-max) ;; whole buffer
-	   (expand-file-name blogsync-command)
-	   nil "*blogsync*" t
-	   (list "push" (buffer-file-name))))
-  (message "Blogsync push ... done"))
+    (let ((curfile buffer-file-name)
+	  (curbuff (current-buffer))
+	  (newfile nil))
+      (cd (expand-file-name blogsync-rootdir))
+      (apply (function call-process-region)
+	     (point-min) (point-max) ;; whole buffer
+	     (expand-file-name blogsync-command)
+	     nil "*blogsync*" t
+	     (list "push" (buffer-file-name)))
+      (message "Blogsync push ... done")
+      (setq newfile (blogsync--get-stored-filename))
+      (if (not (string= curfile newfile))
+	  (delete-file curfile))
+      (kill-buffer curbuff)
+      (find-file newfile)
+      (blogsync-mode))))
 
 (provide 'blogsync-mode)
 ;;; blogsync-mode.el ends here
