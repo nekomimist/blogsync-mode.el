@@ -102,11 +102,12 @@
 	     (list "push" (buffer-file-name)))
       (message "Blogsync push ... done")
       (setq newfile (blogsync--get-stored-filename))
-      (if (not (string= curfile newfile))
-	  (delete-file curfile))
-      (kill-buffer curbuff)
-      (find-file newfile)
-      (blogsync-mode))))
+      (if (and newfile (not (string= curfile newfile)))
+	  (progn
+	    (delete-file curfile)
+	    (kill-buffer curbuff)
+	    (find-file newfile)
+	    (blogsync-mode))))))
 
 (provide 'blogsync-mode)
 ;;; blogsync-mode.el ends here
