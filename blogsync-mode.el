@@ -35,7 +35,7 @@
 (defun blogsync--setup-exec ()
   "setup to execute blogsync."
   (if (not (exec-installed-p (expand-file-name blogsync-command)))
-      (error "The bogsync-command is not properly set"))
+      (error "The blogsync-command is not properly set"))
   (if (get-process "blogsync")
       (delete-process "blogsync"))
   (with-current-buffer (get-buffer-create "*blogsync*")
@@ -44,14 +44,14 @@
 
 (defun blogsync--get-stored-filename ()
   "get filename which bloogsync stores"
-  (save-excursion
-    (set-buffer "*blogsync*")
+  (with-current-buffer "*blogsync*"
     (goto-char (point-max))
     (if (not (re-search-backward "store \\(.*\\)" nil t))
 	nil
       (expand-file-name (buffer-substring-no-properties
 			 (match-beginning 1) (match-end 1))))))
 
+;;;###autoload
 (defun blogsync-pull ()
   "Execute blogsync push."
   (interactive)
@@ -65,6 +65,7 @@
 	   (list "pull" blogsync-hatenablog-host)))
   (message "Blogsync pull ... done"))
 
+;;;###autoload
 (defun blogsync-post ()
   "Execute blogsync post."
   (interactive)
@@ -72,16 +73,19 @@
       (user-error "Abort"))
   (blogsync--setup-exec)
   (message "Blogsync push")
-  (save-excursion
+  (with-temp-buffer
+    (insert "---\nTitle: Temporary Title\nDraft: yes\n---\n")
     (cd (expand-file-name blogsync-rootdir))
-    (apply (function call-process)
+    (apply (function call-process-region)
+	   nil nil ;; whole buffer
 	   (expand-file-name blogsync-command)
 	   nil "*blogsync*" t
-	   (list "post" blogsync-hatenablog-host "--draft"))
-    (message "Blogsync post ... done"))
+	   (list "post" blogsync-hatenablog-host))
+    (message "Blogsync post ... done")
     (find-file (blogsync--get-stored-filename))
-    (blogsync-mode))
+    (blogsync-mode)))
 
+;;;###autoload
 (defun blogsync-push ()
   "Execute blogsync push with current buffer."
   (interactive)
@@ -96,7 +100,7 @@
 	  (newfile nil))
       (cd (expand-file-name blogsync-rootdir))
       (apply (function call-process-region)
-	     (point-min) (point-max) ;; whole buffer
+	     nil nil ;; whole buffer
 	     (expand-file-name blogsync-command)
 	     nil "*blogsync*" t
 	     (list "push" (buffer-file-name)))
